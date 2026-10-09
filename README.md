@@ -16,3 +16,8 @@ Open `index.html` in a modern desktop browser while online. It loads Three.js fr
 6. Android media controller for Yandex Music and SoundCloud.
 
 Single wrist IMU does not reconstruct finger joint poses or absolute hand position. These need additional instrumentation or validated inference.
+
+
+## Sensor Bridge v0.4
+
+Open the repo in Android Studio to sync the `wear` module. See [Sensor Bridge docs](docs/SENSOR_BRIDGE.md).

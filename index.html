@@ -26,7 +26,7 @@ const watchBasis=new THREE.Matrix4().makeBasis(new THREE.Vector3(0,0,1),new THRE
 watchRoot.quaternion.setFromRotationMatrix(watchBasis);
 watchRoot.rotateZ((+document.getElementById('wa').value)*Math.PI/180);document.getElementById('wyout').textContent=document.getElementById('wy').value+'%';document.getElementById('wxout').textContent=document.getElementById('wx').value;document.getElementById('wzout').textContent=document.getElementById('wz').value;document.getElementById('waout').textContent=document.getElementById('wa').value+'°';}
 let watchBaseY=-.42;
-['roll','pitch','yaw','wy','wx','wz','wa'].forEach(n=>document.getElementById(n).addEventListener('input',()=>{playing=false;document.getElementById('demo').textContent='▶ Демо';update();}));
+['roll','pitch','yaw','wy','wx','wz','wa'].forEach(n=>document.getElementById(n).addEventListener('input',()=>{playing=false;gwlLive=false;gwlToggle.textContent='LIVE: OFF';document.getElementById('demo').textContent='▶ Демо';update();}));
 document.getElementById('left').onclick=()=>setSide('left');document.getElementById('right').onclick=()=>setSide('right');
 document.getElementById('reset').onclick=()=>{playing=false;for(const n of ['roll','pitch','yaw','wy','wx','wz','wa'])document.getElementById(n).value=0;document.getElementById('demo').textContent='▶ Демо';update();};
 document.getElementById('demo').onclick=()=>{playing=!playing;playStart=performance.now();document.getElementById('demo').textContent=playing?'⏸ Стоп':'▶ Демо';};
@@ -44,5 +44,27 @@ new GLTFLoader().load('./assets/hand-posable.glb',gltf=>{
  document.getElementById('load').innerHTML=message;setSide('left');update();
 },undefined,err=>{document.getElementById('load').textContent='Ошибка загрузки GLB: '+err.message+'; проверь локальный сервер и файл assets/hand-posable.glb';console.error(err)});
 function resize(){let w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}new ResizeObserver(resize).observe(stage);resize();setSide('left');update();
+
+// Sensor Bridge v0.4: localhost receiver over ADB reverse. Visualization frame not calibrated.
+let gwlLive=false;
+const gwlToggle=document.createElement('button');gwlToggle.textContent='LIVE: OFF';
+const gwlStatus=document.createElement('div');gwlStatus.className='small';gwlStatus.textContent='Receiver disconnected / no data';
+const gwlActions=document.getElementById('demo').parentElement;
+gwlActions.appendChild(gwlToggle);gwlActions.appendChild(gwlStatus);
+gwlToggle.onclick=()=>{gwlLive=!gwlLive;playing=false;document.getElementById('demo').textContent='▶ Демо';gwlToggle.textContent='LIVE: '+(gwlLive?'ON':'OFF');};
+async function gwlLivePoll(){
+ try{
+  const res=await fetch('/state',{cache:'no-store'});if(!res.ok)throw Error(res.status);
+  const data=await res.json();
+  gwlStatus.textContent=data.connected?'LIVE seq='+data.seq+' age='+data.age_ms+'ms':'Waiting for watch telemetry';
+  if(gwlLive && data.connected && data.quat_xyzw){
+   const q=data.quat_xyzw;
+   motion.rotation.set(0,0,0);
+   motion.quaternion.set(q[0],q[1],q[2],q[3]).normalize();
+  }
+ }catch(e){gwlStatus.textContent='Receiver offline: run python tools/receiver.py';}
+}
+setInterval(gwlLivePoll,100);
+
 function loop(t){requestAnimationFrame(loop);if(playing){let s=(t-playStart)/1000;document.getElementById('roll').value=Math.round(55*Math.sin(s*1.6));document.getElementById('pitch').value=Math.round(30*Math.sin(s*1.1));document.getElementById('yaw').value=Math.round(65*Math.sin(s*.7));update();}orbit.update();renderer.render(scene,camera);}requestAnimationFrame(loop);
 </script></body></html>
