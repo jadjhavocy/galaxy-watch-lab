@@ -1,6 +1,6 @@
-<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Galaxy Watch Lab — Motion Studio v0.5</title><style>
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Galaxy Watch Lab — Motion Studio v0.6</title><style>
 *{box-sizing:border-box}html,body{margin:0;height:100%;font-family:Segoe UI,Arial,sans-serif;background:#0b1220;color:#edf6ff}main{display:grid;grid-template-columns:minmax(0,1fr) 340px;height:100vh}section{position:relative;min-height:400px}canvas{display:block;width:100%;height:100%}header{position:absolute;left:20px;top:16px;z-index:3;pointer-events:none}h1{font-size:21px;margin:0 0 8px}p{line-height:1.5}.small{font-size:12px;color:#9eb2c9}aside{overflow:auto;padding:20px;border-left:1px solid #263954;background:#151f31}h2{font-size:15px;margin:12px 0}label{display:flex;align-items:center;justify-content:space-between;font-size:13px;margin-top:14px}input[type=range]{width:100%;accent-color:#41d7d0;margin-top:6px}button{padding:9px 12px;border:1px solid #48647c;border-radius:8px;background:#24435c;color:white;cursor:pointer}button.active{background:#15877e;border-color:#3ef5d9}.actions{display:flex;gap:7px;flex-wrap:wrap;margin:12px 0}.status{background:#243248;padding:12px;border-radius:9px;margin:14px 0}.status strong{color:#72e8e0}hr{border:0;border-top:1px solid #35455b;margin:19px 0}@media(max-width:850px){main{display:block;height:auto}section{height:57vh}aside{border-left:0;border-top:1px solid #263954}}
-</style></head><body><main><section id="stage"><header><h1>Galaxy Watch Lab / <span style="color:#43d2c8">Motion Studio v0.5</span></h1><div class="small">Rigged anatomical hand • local asset • IMU-ready</div></header><canvas id="view"></canvas></section><aside><h2>Рука</h2><div class="actions"><button id="left" class="active">Левая</button><button id="right">Правая</button></div><div id="load" class="status">Загрузка GLB…</div><h2>Ориентация запястья</h2><p class="small">Пока движение симулируется. Жесты пальцев не измеряются часами.</p><label>Roll <output id="ro">0°</output></label><input id="roll" type="range" min="-180" max="180" value="0"><label>Pitch <output id="po">0°</output></label><input id="pitch" type="range" min="-90" max="90" value="0"><label>Yaw <output id="yo">0°</output></label><input id="yaw" type="range" min="-180" max="180" value="0"><div class="actions"><button id="demo">▶ Демо</button><button id="reset">Сброс</button></div><hr><h2>Часы — монтаж на 3D-кисти</h2><p class="small">Упрощённый корпус. Уточняем положение и поворот после проверки анатомической системы координат.</p><label>Сдвиг вдоль кисти <output id="wyout">0%</output></label><input type="range" id="wy" min="-50" max="50" value="0"><label>Watch X <output id="wxout">0</output></label><input type="range" id="wx" min="-50" max="50" value="0"><label>Watch Z <output id="wzout">0</output></label><input type="range" id="wz" min="-50" max="50" value="0"><label>Поворот корпуса <output id="waout">0°</output></label><input type="range" id="wa" min="-180" max="180" value="0"><hr><div class="status">Источник: <strong>SIMULATED</strong><div class="small" style="margin-top:7px">Galaxy Watch5 Pro пока не подключены.</div></div><p class="small">Модель кисти: Innerscene / MakeHuman CC0. Неофициальная геометрия часов. Для загрузки требуется локальный HTTP-сервер и доступ к модульному CDN Three.js.</p></aside></main><script type="module">
+</style></head><body><main><section id="stage"><header><h1>Galaxy Watch Lab / <span style="color:#43d2c8">Motion Studio v0.6</span></h1><div class="small">Rigged anatomical hand • local asset • IMU-ready</div></header><canvas id="view"></canvas></section><aside><h2>Рука</h2><div class="actions"><button id="left" class="active">Левая</button><button id="right">Правая</button></div><div id="load" class="status">Загрузка GLB…</div><h2>Ориентация запястья</h2><p class="small">Пока движение симулируется. Жесты пальцев не измеряются часами.</p><label>Roll <output id="ro">0°</output></label><input id="roll" type="range" min="-180" max="180" value="0"><label>Pitch <output id="po">0°</output></label><input id="pitch" type="range" min="-90" max="90" value="0"><label>Yaw <output id="yo">0°</output></label><input id="yaw" type="range" min="-180" max="180" value="0"><div class="actions"><button id="demo">▶ Демо</button><button id="reset">Сброс</button></div><hr><h2>Часы — монтаж на 3D-кисти</h2><p class="small">Упрощённый корпус. Уточняем положение и поворот после проверки анатомической системы координат.</p><label>Сдвиг вдоль кисти <output id="wyout">0%</output></label><input type="range" id="wy" min="-50" max="50" value="0"><label>Watch X <output id="wxout">0</output></label><input type="range" id="wx" min="-50" max="50" value="0"><label>Watch Z <output id="wzout">0</output></label><input type="range" id="wz" min="-50" max="50" value="0"><label>Поворот корпуса <output id="waout">0°</output></label><input type="range" id="wa" min="-180" max="180" value="0"><hr><div class="status">Источник: <strong>SIMULATED</strong><div class="small" style="margin-top:7px">Galaxy Watch5 Pro пока не подключены.</div></div><p class="small">Модель кисти: Innerscene / MakeHuman CC0. Неофициальная геометрия часов. Для загрузки требуется локальный HTTP-сервер и доступ к модульному CDN Three.js.</p></aside></main><script type="module">
 import * as THREE from 'https://esm.sh/three@0.170.0';
 import {OrbitControls} from 'https://esm.sh/three@0.170.0/examples/jsm/controls/OrbitControls.js';
 import {GLTFLoader} from 'https://esm.sh/three@0.170.0/examples/jsm/loaders/GLTFLoader.js';
@@ -55,7 +55,7 @@ new GLTFLoader().load('./assets/hand-posable.glb',gltf=>{
 function resize(){let w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}new ResizeObserver(resize).observe(stage);resize();setSide('left');update();
 
 // Sensor Bridge v0.4: localhost receiver over ADB reverse. Visualization frame not calibrated.
-// GWL Motion Studio v0.5 LIVE: calibrated IMU quaternion pipeline.
+// GWL Motion Studio v0.6 LIVE: calibrated IMU quaternion pipeline.
 let gwlLive=false;
 let gwlCalibration=null, gwlLatest=null, gwlSeq=-1;
 let gwlTarget = new THREE.Quaternion();
@@ -74,11 +74,30 @@ function gwlMapQuaternion(values){
  if(gwlOptions.flipZ)q.premultiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,1),Math.PI));
  return q;
 }
+
+// 24 orthonormal right-handed coordinate frames: no mirror transforms.
+const gwlAxes=[new THREE.Vector3(1,0,0),new THREE.Vector3(0,1,0),new THREE.Vector3(0,0,1)];
+const gwlLetters=['X','Y','Z'];const gwlFrames=[];
+for(let i=0;i<3;i++)for(let j=0;j<3;j++){
+ if(i===j)continue;
+ for(const a of [1,-1])for(const b of [1,-1]){
+  const x=gwlAxes[i].clone().multiplyScalar(a), y=gwlAxes[j].clone().multiplyScalar(b), z=x.clone().cross(y);
+  const k=z.toArray().findIndex(v=>Math.abs(v)>.5), sign=z.getComponent(k)>0?'+':'-';
+  const label=`X from ${a>0?'+':'-'}${gwlLetters[i]} / Y from ${b>0?'+':'-'}${gwlLetters[j]} / Z from ${sign}${gwlLetters[k]}`;
+  const q=new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(x,y,z));
+  gwlFrames.push({label,q});
+ }
+}
+let gwlAxisIndex=Math.max(0,Math.min(23,Number(localStorage.getItem('gwl-axis-v06')||0)));
+const gwlAxisFrame=gwlFrames[gwlAxisIndex].q.clone();
+
 function gwlUpdatePose(){
  if(!gwlLive||!gwlLatest)return;
  gwlMapped.copy(gwlMapQuaternion(gwlLatest));
  if(!gwlCalibration)gwlCalibration=gwlMapped.clone();
- gwlTarget.copy(gwlCalibration).invert().multiply(gwlMapped);
+ // GWL_AXIS_FRAME_V06: q(relative world) mapped by a proper basis rotation.
+ gwlTarget.copy(gwlMapped).multiply(gwlCalibration.clone().invert());
+ gwlTarget.premultiply(gwlAxisFrame).multiply(gwlAxisFrame.clone().invert());
  gwlPose.slerp(gwlTarget,Math.min(1,Math.max(.02,gwlOptions.smooth)));
  motion.quaternion.copy(gwlPose);
 }
@@ -101,6 +120,25 @@ async function gwlLivePoll(){
  }catch(e){gwlStatus.textContent='Receiver offline: run python tools/receiver.py';}
 }
 setInterval(gwlLivePoll,100);
+
+const gwlAxisPanel=document.createElement('div');
+gwlAxisPanel.innerHTML=`<hr><h2>Оси IMU — v0.6</h2><p class="small">Выбираем правильную систему координат, не меняя сигнал датчиков.</p><label>Система координат</label><select id="gwlAxisSelect" style="width:100%;padding:9px;background:#243248;color:white;border:1px solid #48647c;border-radius:8px"></select><div class="actions"><button id="gwlAxisPrev">◀ Предыдущая</button><button id="gwlAxisNext">Следующая ▶</button></div><p id="gwlAxisHelp" class="small">Проверьте наклон, поворот и вращение вокруг предплечья.</p>`;
+document.querySelector('aside').appendChild(gwlAxisPanel);
+const gwlAxisSelect=document.getElementById('gwlAxisSelect');
+for(let i=0;i<gwlFrames.length;i++){
+ const opt=document.createElement('option');opt.value=String(i);opt.textContent=`${i+1}/24 ${gwlFrames[i].label}`;gwlAxisSelect.appendChild(opt);
+}
+function gwlSetAxis(idx){
+ gwlAxisIndex=(idx+24)%24;gwlAxisFrame.copy(gwlFrames[gwlAxisIndex].q);
+ gwlAxisSelect.value=String(gwlAxisIndex);localStorage.setItem('gwl-axis-v06',String(gwlAxisIndex));
+ gwlPose.identity();
+ document.getElementById('gwlAxisHelp').textContent=`Пресет ${gwlAxisIndex+1}/24. Проверьте три направления движений.`;
+}
+gwlAxisSelect.onchange=()=>gwlSetAxis(Number(gwlAxisSelect.value));
+document.getElementById('gwlAxisPrev').onclick=()=>gwlSetAxis(gwlAxisIndex-1);
+document.getElementById('gwlAxisNext').onclick=()=>gwlSetAxis(gwlAxisIndex+1);
+gwlSetAxis(gwlAxisIndex);
+
 
 const gwlPanel=document.createElement('div');gwlPanel.innerHTML=`<hr><h2>LIVE Motion v0.5</h2><p class="small">Нейтральная ориентация и сглаживание. Перемещение кисти в пространстве IMU не измеряет; пальцы пока не отслеживаются.</p><div class="actions"><button id="gwlCal">Calibrate neutral</button><button id="gwlSave">Save settings</button></div><label>Smoothing <output id="gwlSmoothOut">${gwlOptions.smooth.toFixed(2)}</output></label><input id="gwlSmooth" type="range" min="0.02" max="1" step="0.02" value="${gwlOptions.smooth}"><div class="actions"><label><input type="checkbox" id="gwlFx"> X 180°</label><label><input type="checkbox" id="gwlFy"> Y 180°</label><label><input type="checkbox" id="gwlFz"> Z 180°</label></div><div class="small" id="gwlCalStatus">Нажми Calibrate neutral, удерживая руку неподвижно.</div>`;
 document.querySelector('aside').appendChild(gwlPanel);
