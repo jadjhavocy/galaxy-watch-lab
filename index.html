@@ -1,6 +1,6 @@
-<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Galaxy Watch Lab — Motion Studio v0.6</title><style>
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Galaxy Watch Lab — Motion Studio v0.7</title><style>
 *{box-sizing:border-box}html,body{margin:0;height:100%;font-family:Segoe UI,Arial,sans-serif;background:#0b1220;color:#edf6ff}main{display:grid;grid-template-columns:minmax(0,1fr) 340px;height:100vh}section{position:relative;min-height:400px}canvas{display:block;width:100%;height:100%}header{position:absolute;left:20px;top:16px;z-index:3;pointer-events:none}h1{font-size:21px;margin:0 0 8px}p{line-height:1.5}.small{font-size:12px;color:#9eb2c9}aside{overflow:auto;padding:20px;border-left:1px solid #263954;background:#151f31}h2{font-size:15px;margin:12px 0}label{display:flex;align-items:center;justify-content:space-between;font-size:13px;margin-top:14px}input[type=range]{width:100%;accent-color:#41d7d0;margin-top:6px}button{padding:9px 12px;border:1px solid #48647c;border-radius:8px;background:#24435c;color:white;cursor:pointer}button.active{background:#15877e;border-color:#3ef5d9}.actions{display:flex;gap:7px;flex-wrap:wrap;margin:12px 0}.status{background:#243248;padding:12px;border-radius:9px;margin:14px 0}.status strong{color:#72e8e0}hr{border:0;border-top:1px solid #35455b;margin:19px 0}@media(max-width:850px){main{display:block;height:auto}section{height:57vh}aside{border-left:0;border-top:1px solid #263954}}
-</style></head><body><main><section id="stage"><header><h1>Galaxy Watch Lab / <span style="color:#43d2c8">Motion Studio v0.6</span></h1><div class="small">Rigged anatomical hand • local asset • IMU-ready</div></header><canvas id="view"></canvas></section><aside><h2>Рука</h2><div class="actions"><button id="left" class="active">Левая</button><button id="right">Правая</button></div><div id="load" class="status">Загрузка GLB…</div><h2>Ориентация запястья</h2><p class="small">Пока движение симулируется. Жесты пальцев не измеряются часами.</p><label>Roll <output id="ro">0°</output></label><input id="roll" type="range" min="-180" max="180" value="0"><label>Pitch <output id="po">0°</output></label><input id="pitch" type="range" min="-90" max="90" value="0"><label>Yaw <output id="yo">0°</output></label><input id="yaw" type="range" min="-180" max="180" value="0"><div class="actions"><button id="demo">▶ Демо</button><button id="reset">Сброс</button></div><hr><h2>Часы — монтаж на 3D-кисти</h2><p class="small">Упрощённый корпус. Уточняем положение и поворот после проверки анатомической системы координат.</p><label>Сдвиг вдоль кисти <output id="wyout">0%</output></label><input type="range" id="wy" min="-50" max="50" value="0"><label>Watch X <output id="wxout">0</output></label><input type="range" id="wx" min="-50" max="50" value="0"><label>Watch Z <output id="wzout">0</output></label><input type="range" id="wz" min="-50" max="50" value="0"><label>Поворот корпуса <output id="waout">0°</output></label><input type="range" id="wa" min="-180" max="180" value="0"><hr><div class="status">Источник: <strong>SIMULATED</strong><div class="small" style="margin-top:7px">Galaxy Watch5 Pro пока не подключены.</div></div><p class="small">Модель кисти: Innerscene / MakeHuman CC0. Неофициальная геометрия часов. Для загрузки требуется локальный HTTP-сервер и доступ к модульному CDN Three.js.</p></aside></main><script type="module">
+</style></head><body><main><section id="stage"><header><h1>Galaxy Watch Lab / <span style="color:#43d2c8">Motion Studio v0.7</span></h1><div class="small">Rigged anatomical hand • local asset • IMU-ready</div></header><canvas id="view"></canvas></section><aside><h2>Рука</h2><div class="actions"><button id="left" class="active">Левая</button><button id="right">Правая</button></div><div id="load" class="status">Загрузка GLB…</div><h2>Ориентация запястья</h2><p class="small">Пока движение симулируется. Жесты пальцев не измеряются часами.</p><label>Roll <output id="ro">0°</output></label><input id="roll" type="range" min="-180" max="180" value="0"><label>Pitch <output id="po">0°</output></label><input id="pitch" type="range" min="-90" max="90" value="0"><label>Yaw <output id="yo">0°</output></label><input id="yaw" type="range" min="-180" max="180" value="0"><div class="actions"><button id="demo">▶ Демо</button><button id="reset">Сброс</button></div><hr><h2>Часы — монтаж на 3D-кисти</h2><p class="small">Упрощённый корпус. Уточняем положение и поворот после проверки анатомической системы координат.</p><label>Сдвиг вдоль кисти <output id="wyout">0%</output></label><input type="range" id="wy" min="-50" max="50" value="0"><label>Watch X <output id="wxout">0</output></label><input type="range" id="wx" min="-50" max="50" value="0"><label>Watch Z <output id="wzout">0</output></label><input type="range" id="wz" min="-50" max="50" value="0"><label>Поворот корпуса <output id="waout">0°</output></label><input type="range" id="wa" min="-180" max="180" value="0"><hr><div class="status">Источник: <strong>SIMULATED</strong><div class="small" style="margin-top:7px">Galaxy Watch5 Pro пока не подключены.</div></div><p class="small">Модель кисти: Innerscene / MakeHuman CC0. Неофициальная геометрия часов. Для загрузки требуется локальный HTTP-сервер и доступ к модульному CDN Three.js.</p></aside></main><script type="module">
 import * as THREE from 'https://esm.sh/three@0.170.0';
 import {OrbitControls} from 'https://esm.sh/three@0.170.0/examples/jsm/controls/OrbitControls.js';
 import {GLTFLoader} from 'https://esm.sh/three@0.170.0/examples/jsm/loaders/GLTFLoader.js';
@@ -55,7 +55,7 @@ new GLTFLoader().load('./assets/hand-posable.glb',gltf=>{
 function resize(){let w=stage.clientWidth,h=stage.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}new ResizeObserver(resize).observe(stage);resize();setSide('left');update();
 
 // Sensor Bridge v0.4: localhost receiver over ADB reverse. Visualization frame not calibrated.
-// GWL Motion Studio v0.6 LIVE: calibrated IMU quaternion pipeline.
+// GWL Motion Studio v0.7 LIVE: calibrated IMU quaternion pipeline.
 let gwlLive=false;
 let gwlCalibration=null, gwlLatest=null, gwlSeq=-1;
 let gwlTarget = new THREE.Quaternion();
@@ -88,7 +88,7 @@ for(let i=0;i<3;i++)for(let j=0;j<3;j++){
   gwlFrames.push({label,q});
  }
 }
-let gwlAxisIndex=Math.max(0,Math.min(23,Number(localStorage.getItem('gwl-axis-v06')||0)));
+let gwlAxisIndex=Math.max(0,Math.min(23,Number(localStorage.getItem('gwl-axis-v06')??20)));
 const gwlAxisFrame=gwlFrames[gwlAxisIndex].q.clone();
 
 function gwlUpdatePose(){
@@ -111,8 +111,8 @@ async function gwlLivePoll(){
  try{
   const res=await fetch('/state',{cache:'no-store'});if(!res.ok)throw Error(res.status);
   const data=await res.json();
-  gwlStatus.textContent=data.connected?'LIVE seq='+data.seq+' age='+data.age_ms+'ms':'Waiting for watch telemetry';gwlStatus.style.color=data.connected?'#7de6cf':'#ffb4aa';
-  if(gwlLive && data.connected && data.quat_xyzw){
+  gwlStatus.textContent=data.connected?(data.sensor_fresh?'LIVE':'STALE SENSOR')+' seq='+data.seq+' rx='+data.age_ms+'ms imu='+data.sensor_age_ms+'ms':'Waiting for watch telemetry';gwlStatus.style.color=data.connected?'#7de6cf':'#ffb4aa';
+  if(gwlLive && data.connected && data.sensor_fresh && data.quat_xyzw){
    const q=data.quat_xyzw;
    if(data.seq!==gwlSeq){gwlSeq=data.seq;gwlLatest=q;}
    gwlUpdatePose();
@@ -149,6 +149,22 @@ document.getElementById('gwlSmooth').oninput=e=>{gwlOptions.smooth=+e.target.val
 document.getElementById('gwlCal').onclick=()=>{if(!gwlLatest){document.getElementById('gwlCalStatus').textContent='No live packet yet';return;}gwlCalibration=gwlMapQuaternion(gwlLatest);gwlPose.identity();document.getElementById('gwlCalStatus').textContent='Neutral pose calibrated. Wave wrist to verify.';};
 document.getElementById('gwlSave').onclick=()=>{localStorage.setItem('gwl-motion-v05',JSON.stringify(gwlOptions));document.getElementById('gwlCalStatus').textContent='Settings saved (neutral resets per session).';};
 
+
+
+// gwl_v07_diagnostics: laboratory recording and screen-off freshness monitor.
+const gwlDiag=document.createElement('div');
+gwlDiag.innerHTML=`<hr><h2>Диагностика IMU — v0.7</h2><div id="gwlDiagLine" class="status">Ожидание данных…</div><p class="small">SCREEN OFF: мониторинг свежести реальных сенсорных событий. Частота в приложении часов — целевая, не гарантированная.</p><h2>Gesture Recorder</h2><label>Метка жеста</label><input id="gwlRecLabel" value="wrist_flick" maxlength="50" style="width:100%;padding:10px;border-radius:8px;background:#243248;color:#fff;border:1px solid #48647c"><div class="actions"><button id="gwlRecStart">● Запись</button><button id="gwlRecStop">■ Стоп</button></div><div id="gwlRecState" class="small">JSONL записывается на ПК в artifacts/gesture-recordings</div>`;
+document.querySelector('aside').appendChild(gwlDiag);
+async function gwlRecordAction(route, body){
+ try{const r=await fetch('/record/'+route,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})});if(!r.ok)throw new Error('HTTP '+r.status);return await r.json();}
+ catch(e){document.getElementById('gwlRecState').textContent='Ошибка записи: '+e.message;return null;}
+}
+document.getElementById('gwlRecStart').onclick=async()=>{const d=await gwlRecordAction('start',{label:document.getElementById('gwlRecLabel').value});if(d)document.getElementById('gwlRecState').textContent='Запись: '+d.path;};
+document.getElementById('gwlRecStop').onclick=async()=>{const d=await gwlRecordAction('stop');if(d)document.getElementById('gwlRecState').textContent='Сохранено '+d.count+' отсчётов: '+d.path;};
+setInterval(async()=>{try{const [s,r]=await Promise.all([fetch('/state').then(x=>x.json()),fetch('/record/status').then(x=>x.json())]);
+ const el=document.getElementById('gwlDiagLine');el.textContent='Экран: '+(s.screen_on===false?'OFF':s.screen_on===true?'ON':'—')+' | IMU '+(s.sensor_fresh?'FRESH':'STALE')+' | age '+(s.sensor_age_ms??'—')+' мс | unique '+s.unique_samples+' | duplicate '+s.duplicate_samples+' | battery '+(s.battery_pct??'—')+'% | target '+(s.target_hz??'—')+' Hz | errors '+(s.send_failures??'—');el.style.color=s.sensor_fresh?'#7de6cf':'#ffb4aa';
+ if(r.active)document.getElementById('gwlRecState').textContent='● RECORDING '+r.label+' — '+r.count+' samples';
+}catch(e){document.getElementById('gwlDiagLine').textContent='Для v0.7 нужно перезапустить обновлённый receiver.py';}},1000);
 
 function loop(t){requestAnimationFrame(loop);if(playing){let s=(t-playStart)/1000;document.getElementById('roll').value=Math.round(55*Math.sin(s*1.6));document.getElementById('pitch').value=Math.round(30*Math.sin(s*1.1));document.getElementById('yaw').value=Math.round(65*Math.sin(s*.7));update();}gwlUpdatePose();orbit.update();renderer.render(scene,camera);}requestAnimationFrame(loop);
 </script></body></html>

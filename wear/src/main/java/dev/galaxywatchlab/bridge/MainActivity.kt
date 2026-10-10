@@ -14,20 +14,33 @@ class MainActivity : Activity() {
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
-            setPadding(18, 15, 18, 15)
+            setPadding(16, 12, 16, 12)
         }
-        val title = TextView(this).apply { text = "GWL Sensor Bridge v0.4"; textSize = 17f; gravity = Gravity.CENTER }
-        val explanation = TextView(this).apply {
-            text = "ADB reverse: 127.0.0.1:8766\nSends orientation + acceleration\nStart only when paired to PC"
+        val title = TextView(this).apply {
+            text = "GWL IMU v0.7"; textSize = 18f; gravity = Gravity.CENTER
+        }
+        val info = TextView(this).apply {
+            text = "Screen-off lab mode\nRequires ADB reverse to PC\nHigher Hz uses more battery"
             textSize = 12f; gravity = Gravity.CENTER
         }
-        val start = Button(this).apply { text = "Start sensors"; setOnClickListener {
-            startForegroundService(Intent(this@MainActivity, SensorBridgeService::class.java).setAction("START"))
-        }}
-        val stop = Button(this).apply { text = "Stop sensors"; setOnClickListener {
-            startService(Intent(this@MainActivity, SensorBridgeService::class.java).setAction("STOP"))
-        }}
-        root.addView(title); root.addView(explanation); root.addView(start); root.addView(stop)
+        root.addView(title); root.addView(info)
+        for (rate in listOf(10, 25, 50)) {
+            root.addView(Button(this).apply {
+                text = "Start / $rate Hz"
+                setOnClickListener {
+                    startForegroundService(Intent(this@MainActivity, SensorBridgeService::class.java)
+                        .setAction("START").putExtra("HZ", rate))
+                    info.text = "Streaming $rate Hz (target)\nCan turn screen off"
+                }
+            })
+        }
+        root.addView(Button(this).apply {
+            text = "Stop sensors"
+            setOnClickListener {
+                startService(Intent(this@MainActivity, SensorBridgeService::class.java).setAction("STOP"))
+                info.text = "Stopped"
+            }
+        })
         setContentView(root)
     }
 }
