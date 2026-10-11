@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {assess} from './gesture_campaign.mjs';
+const p=(ms,g)=>({timestamp_ns:ms*1e6,gyro_rads:g,quat_xyzw:[0,0,0,1]});
+let quiet=Array.from({length:20},(_,i)=>p(i*100,[.1,.1,0]));
+assert.equal(assess(quiet,'still',2).events,0);
+let flick=[p(1000,[3,0,0]),p(1100,[3.5,0,0])];
+assert.equal(assess(flick,'flick',1).events,1);
+assert.equal(assess([...flick,flick[1]],'flick',1).duplicates,1);
+assert.equal(assess([],'empty',1).events,0);
+console.log('GWL_V081_CAMPAIGN_TESTS=PASS');
