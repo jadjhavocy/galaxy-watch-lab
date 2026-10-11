@@ -167,4 +167,5 @@ setInterval(async()=>{try{const [s,r]=await Promise.all([fetch('/state').then(x=
 }catch(e){document.getElementById('gwlDiagLine').textContent='Для v0.7 нужно перезапустить обновлённый receiver.py';}},1000);
 
 function loop(t){requestAnimationFrame(loop);if(playing){let s=(t-playStart)/1000;document.getElementById('roll').value=Math.round(55*Math.sin(s*1.6));document.getElementById('pitch').value=Math.round(30*Math.sin(s*1.1));document.getElementById('yaw').value=Math.round(65*Math.sin(s*.7));update();}gwlUpdatePose();orbit.update();renderer.render(scene,camera);}requestAnimationFrame(loop);
-</script></body></html>
+</script><script type="module" src="./motion/panel.mjs"></script>
+</body></html>
