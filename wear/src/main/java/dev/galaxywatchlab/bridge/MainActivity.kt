@@ -9,6 +9,8 @@ import android.os.Looper
 import android.os.SystemClock
 import android.view.Gravity
 import android.widget.Button
+import android.widget.EditText
+import android.text.InputType
 import android.widget.LinearLayout
 import android.widget.RadioButton
 import android.widget.RadioGroup
@@ -21,6 +23,8 @@ class MainActivity : Activity() {
     private lateinit var startButton: Button
     private lateinit var stopButton: Button
     private lateinit var frequency: RadioGroup
+    private lateinit var hostInput: EditText
+    private lateinit var tokenInput: EditText
     private val refresh = object : Runnable {
         override fun run() {
             updateStatus()
@@ -61,6 +65,8 @@ class MainActivity : Activity() {
         startButton.isEnabled = !running
         stopButton.isEnabled = running
         frequency.isEnabled = !running
+        hostInput.isEnabled = !running
+        tokenInput.isEnabled = !running
         for (i in 0 until frequency.childCount) frequency.getChildAt(i).isEnabled = !running
     }
 
@@ -72,7 +78,7 @@ class MainActivity : Activity() {
             setPadding(14, 10, 14, 10)
         }
         val title = TextView(this).apply {
-            text = "Galaxy Watch Lab v0.7.3"
+            text = "Galaxy Watch Lab v0.8.2"
             textSize = 17f
             gravity = Gravity.CENTER
         }
@@ -95,15 +101,45 @@ class MainActivity : Activity() {
         frequency.setOnCheckedChangeListener { _, _ ->
             getSharedPreferences("gwl_config", MODE_PRIVATE).edit().putInt("hz", selectedHz()).apply()
         }
+        val config = getSharedPreferences("gwl_config", MODE_PRIVATE)
+        val hostTitle = TextView(this).apply { text = "PC IPv4 (direct Wi-Fi)"; textSize=12f }
+        hostInput = EditText(this).apply {
+            setSingleLine(true)
+            textSize=13f
+            inputType=InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI
+            setText(config.getString("wifi_host", ""))
+            hint="192.168.1.10"
+        }
+        val tokenTitle = TextView(this).apply { text = "LAN bridge token (16 hex)"; textSize=12f }
+        tokenInput = EditText(this).apply {
+            setSingleLine(true)
+            textSize=13f
+            inputType=InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+            setText(config.getString("wifi_token", ""))
+            hint="copy token from PC"
+        }
         status = TextView(this).apply { textSize = 12f; gravity = Gravity.CENTER }
         startButton = Button(this).apply {
             text = "START IMU"
             setOnClickListener {
                 val hz = selectedHz()
+                val host=hostInput.text.toString().trim()
+                val token=tokenInput.text.toString().trim()
+                // Refuse to start unless direct LAN is explicitly configured.
+                if (!Regex("""(?:\d{1,3}\.){3}\d{1,3}""").matches(host) ||
+                    host.split('.').any { (it.toIntOrNull() ?: -1) !in 0..255 } ||
+                    !Regex("[0-9a-fA-F]{16}").matches(token)) {
+                    status.text="Enter valid PC IPv4 and 16-character token first"
+                    return@setOnClickListener
+                }
+                getSharedPreferences("gwl_config", MODE_PRIVATE).edit()
+                    .putString("wifi_host",host).putString("wifi_token",token).apply()
                 getSharedPreferences("gwl_config", MODE_PRIVATE).edit().putInt("hz", hz).apply()
                 val command = Intent(this@MainActivity, SensorBridgeService::class.java)
                     .setAction("START")
                     .putExtra("HZ", hz)
+                    .putExtra("HOST", host)
+                    .putExtra("TOKEN", token)
                 startForegroundService(command)
                 ui.postDelayed({updateStatus()}, 500L)
             }
@@ -118,6 +154,10 @@ class MainActivity : Activity() {
         root.addView(title)
         root.addView(info)
         root.addView(frequency)
+        root.addView(hostTitle)
+        root.addView(hostInput)
+        root.addView(tokenTitle)
+        root.addView(tokenInput)
         root.addView(status)
         root.addView(startButton)
         root.addView(stopButton)

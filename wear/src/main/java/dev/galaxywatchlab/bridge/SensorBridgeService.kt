@@ -29,6 +29,8 @@ class SensorBridgeService : Service(), SensorEventListener {
     @Volatile private var lastSentStamp = 0L
     @Volatile private var active = false
     @Volatile private var hz = 10
+    @Volatile private var wifiHost: String? = null
+    @Volatile private var wifiToken: String? = null
     private val power by lazy { getSystemService(POWER_SERVICE) as PowerManager }
     private val prefs by lazy { getSharedPreferences("gwl_status", MODE_PRIVATE) }
 
@@ -81,6 +83,16 @@ class SensorBridgeService : Service(), SensorEventListener {
         if (intent?.action == "STOP") { stopSelf(); return START_NOT_STICKY }
         // The watch UI chooses 10, 25, or 50 Hz. Transport remains capped at 5 Hz.
         val requestedHz = intent?.getIntExtra("HZ", 10) ?: 10
+        if (intent?.action == "START") {
+            val host = intent.getStringExtra("HOST")
+            val token = intent.getStringExtra("TOKEN")
+            if (host.isNullOrBlank() || token?.matches(Regex("[0-9a-fA-F]{16}")) != true) {
+                stopSelf()
+                return START_NOT_STICKY
+            }
+            wifiHost = host
+            wifiToken = token
+        }
         if (requestedHz in listOf(10, 25, 50) && requestedHz != hz) {
             hz = requestedHz
             Handler(sensorThread.looper).post {
@@ -111,6 +123,7 @@ class SensorBridgeService : Service(), SensorEventListener {
 
     private fun transmit() {
         if (!active) return
+        if (wifiHost == null || wifiToken == null) return
         if (SystemClock.elapsedRealtime() >= stopAt) {
             Handler(Looper.getMainLooper()).post { stopSelf() }
             return
@@ -124,13 +137,14 @@ class SensorBridgeService : Service(), SensorEventListener {
         val number = seq.incrementAndGet()
         val body = """{"schema":1,"seq":$number,"timestamp_ns":$stamp,"quat_xyzw":[${q.joinToString(",")}],"accel_mps2":[${a.joinToString(",")}],"gyro_rads":[${g.joinToString(",")}],"source":"game_rotation_vector","screen_on":${power.isInteractive},"sensor_age_ms":$age,"sensor_events":${events.get()},"send_failures":${failures.get()},"target_hz":$hz,"uptime_ms":${SystemClock.elapsedRealtime() - startedAt}}"""
         try {
-            val connection = URL("http://127.0.0.1:8766/ingest").openConnection() as HttpURLConnection
+            val connection = URL("http://${wifiHost}:8767/ingest").openConnection() as HttpURLConnection
             try {
                 connection.requestMethod = "POST"
                 connection.connectTimeout = 400
                 connection.readTimeout = 400
                 connection.doOutput = true
                 connection.setRequestProperty("Content-Type", "application/json")
+                connection.setRequestProperty("X-GWL-Token", wifiToken)
                 connection.outputStream.use { it.write(body.toByteArray(Charsets.UTF_8)) }
                 if (connection.responseCode != 204) failures.incrementAndGet()
             } finally { connection.disconnect() }
