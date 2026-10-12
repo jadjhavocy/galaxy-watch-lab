@@ -27,6 +27,10 @@ footer{color:#90a4bf;font-size:12px;margin-top:25px}@media(max-width:750px){.gri
 <div class="row"><span class="pill" id="playing">⏸ Пауза</span><span class="pill" id="volume">Громкость 50%</span><span class="pill" id="armed">○ Управление выключено</span></div>
 <div class="row"><button class="primary" id="arm">Активировать на 10 сек.</button><button id="disarm">Отмена</button></div>
 <div class="notice">Одна активация — одна команда. Любая смена профиля выключает управление. Жест Z− всегда отменяет активацию.</div>
+<div class="notice" id="bridgeStatus" role="status" aria-live="polite">Проверяем безопасный режим локального медиамоста…</div>
+<label class="notice" id="liveConsent" style="display:none">
+ <input id="liveAgree" type="checkbox"> Я понимаю: в режиме LIVE медиаклавиши Windows воздействуют на выбранный самой Windows медиасеанс, а не гарантированно на Яндекс Музыку или SoundCloud.
+</label>
 <h3 class="sectiontitle" style="margin-top:24px">Журнал решений</h3><ul id="activity" aria-live="polite"></ul>
 </section>
 <section class="panel"><div class="sectiontitle">02 — Профили</div>

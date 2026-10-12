@@ -35,3 +35,7 @@ All gesture input is synthetic. Raw real-world gesture quality, power usage and 
 ## Future
 
 After manual verification, introduce a provider-aware media-session selector instead of indiscriminate global keys; only then connect real watch events behind the same safety gate. Smart ring stays in long-term backlog.
+
+## Browser-contract fix (v0.8.8.1)
+
+The original v0.8.8 page referred to nonexistent `bridgeStatus`, `liveConsent`, and `liveAgree` DOM elements, breaking mode status/arming in a real browser even though Node-only tests passed. This patch supplies the status and LIVE-mode checkbox UI and introduces a browser-page structure test that verifies all statically addressed elements. Defaults remain DRY_RUN; no Windows media keys are triggered by these tests.
