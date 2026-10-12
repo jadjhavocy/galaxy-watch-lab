@@ -1,0 +1,42 @@
+import assert from 'node:assert/strict';
+import {createMediaBridge} from '../tools/gwl088_media_bridge.mjs';
+import {GestureProfileRouter} from '../motion/gesture_profile_router.mjs';
+const r = new GestureProfileRouter();
+assert.equal(r.accept({type:'wrist_flick',axis:'X',direction:'positive',timestamp_ns:1},100).reason,'not_armed');
+let fakeTime=1000000, calls=[];
+const s=createMediaBridge({port:0,clock:()=>fakeTime,mediaExecutor:async x=>{calls.push(x)}});
+await new Promise((ok,no)=>{s.once('error',no);s.listen(0,'127.0.0.1',ok)});
+try{
+ const addr='http://127.0.0.1:'+s.address().port;
+ const page=await fetch(addr+'/'); assert.equal(page.status,200);
+ const html=await page.text();const match=html.match(/const sessionNonce='([a-f0-9]{48})'/);assert.ok(match);
+ const token=match[1];assert.ok(!html.includes('__GWL_SESSION_NONCE__'));
+ const status=await (await fetch(addr+'/api/status')).json();assert.equal(status.mode,'DRY_RUN');
+ const req=(route,value={},override={})=>fetch(addr+route,{method:'POST',headers:{
+  'origin':addr,'content-type':'application/json','x-gwl-session':token,...(override.headers||{})},body:JSON.stringify(value)});
+ let res=await req('/api/command',{command:'NEXT'});assert.equal(res.status,403,'arm required');
+ res=await req('/api/arm',{}, {headers:{origin:'https://evil.example'}});assert.equal(res.status,403,'origin must match');
+ res=await req('/api/arm',{}, {headers:{'x-gwl-session':'incorrect'}});assert.equal(res.status,403,'nonce must match');
+ res=await req('/api/arm');assert.equal(res.status,200);
+ res=await req('/api/command',{command:'EXEC'});assert.equal(res.status,400,'command allowlist');
+ res=await req('/api/command',{command:'NEXT'});assert.equal(res.status,200);
+ assert.equal((await res.json()).status,'DRY_RUN');assert.equal(calls.length,0);
+ res=await req('/api/command',{command:'NEXT'});assert.equal(res.status,403,'single-shot');
+ fakeTime+=1000; res=await req('/api/arm');assert.equal(res.status,200);
+ res=await req('/api/command',{command:'PLAY_PAUSE'});assert.equal(res.status,200);
+ fakeTime+=1000;res=await req('/api/arm');assert.equal(res.status,200);
+ res=await req('/api/command',{command:'VOLUME_UP'});assert.equal(res.status,200);
+ res=await req('/api/command',{command:'VOLUME_UP'});assert.equal(res.status,403);
+ res=await req('/api/arm');assert.equal(res.status,200);
+ fakeTime+=10001;res=await req('/api/command',{command:'NEXT'});assert.equal(res.status,403,'expiry');
+ res=await req('/api/arm');assert.equal(res.status,200);
+ res=await req('/api/disarm');assert.equal(res.status,200);
+ res=await req('/api/command',{command:'NEXT'});assert.equal(res.status,403,'manual disarm');
+ res=await fetch(addr+'/api/execute');assert.equal(res.status,404,'no general API');
+ res=await fetch(addr+'/motion/virtual_player.mjs');assert.equal(res.status,200);
+ res=await fetch(addr+'/favicon.ico');assert.equal(res.status,404);
+ assert.equal(calls.length,0,'NO OS or injected exec in dry-run');
+}finally{await new Promise(ok=>s.close(ok))}
+console.log('GWL_V088_MEDIA_BRIDGE_TESTS=PASS');
+console.log('DEFAULT_DRY_RUN=PASS ORIGIN_NONCE=PASS SINGLE_SHOT=PASS');
+console.log('REAL_WINDOWS_MEDIA_KEYS_NOT_EXECUTED=YES');
