@@ -1,0 +1,83 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Galaxy Watch Lab · Music Profiles v0.8.7</title>
+<style>
+:root{font-family:system-ui,'Segoe UI',sans-serif;color:#edf2ff;background:#080d19;color-scheme:dark}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 14% 0%,#213a65,transparent 55%),#080d19}
+main{max-width:1180px;margin:auto;padding:40px 22px 65px}header small{font-weight:800;letter-spacing:.13em;color:#88b6ff}
+h1{font-size:clamp(28px,4.5vw,46px);letter-spacing:-.045em;margin:20px 0 12px}p{color:#afc1da;line-height:1.55}
+.tag{display:inline-flex;padding:7px 12px;border:1px solid #695c89;border-radius:99px;color:#e5ccfc;font-size:12px;margin-top:10px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:25px}.panel{background:#111d31;border:1px solid #304260;border-radius:18px;padding:24px;min-width:0}
+.sectiontitle{font-size:12px;font-weight:800;letter-spacing:.13em;color:#8fabcf;text-transform:uppercase;margin:0 0 18px}
+.track{font-size:32px;font-weight:850;letter-spacing:-.035em;margin:12px 0}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:15px 0}.pill{background:#1d304e;padding:8px 11px;border-radius:8px;font-size:13px;color:#bad0ed}
+button,select{font:inherit;color:#eaf2ff;background:#253c60;border:1px solid #49648b;border-radius:10px;padding:11px 14px;min-height:44px}button{cursor:pointer;font-weight:700}
+button:hover{background:#365782}button:focus-visible,select:focus-visible{outline:3px solid #95b6ff;outline-offset:2px}
+button.primary{background:#788af6;color:#0b1330;border-color:#a2afff}.twocol{display:grid;grid-template-columns:1fr 1fr;gap:10px}.twocol button{text-align:left}.twocol button span{display:block;font-size:12px;font-weight:400;opacity:.85;margin-top:4px}
+.mapping{display:grid;grid-template-columns:1fr 1.3fr;align-items:center;gap:10px;margin:10px 0}.mapping select{width:100%}
+#activity{max-height:225px;overflow:auto;display:grid;gap:7px;list-style:none;padding:0}#activity li{background:#1d304d;border-radius:8px;padding:9px 11px;font-size:13px;color:#bed2ea}
+.notice{background:#1d2a45;border-left:3px solid #8793fb;padding:13px;border-radius:6px;font-size:13px;color:#bdd0e9;line-height:1.6;margin-top:17px}
+#armed.active{background:#164234;color:#adffcb}.wide{grid-column:1/-1}.help{font-size:12px;line-height:1.5}
+footer{color:#90a4bf;font-size:12px;margin-top:25px}@media(max-width:750px){.grid{grid-template-columns:1fr}.panel{padding:20px}.wide{grid-column:auto}}
+</style></head><body><main>
+<header><small>GALAXY WATCH LAB · v0.8.7</small><div><span class="tag">OFFLINE / SYNTHETIC / NO REAL MUSIC CONTROL</span></div></header>
+<h1>Жесты под твой музыкальный сценарий</h1>
+<p>Выбирай профиль или настраивай команды для каждого виртуального жеста. Управление безопасно выключено до ручной активации; смена профиля автоматически снимает активацию.</p>
+<div class="grid">
+<section class="panel"><div class="sectiontitle">01 — Виртуальный плеер</div>
+<div id="trackcount">Трек 1 из 3</div><div class="track" id="track">Demo Track A</div>
+<div class="row"><span class="pill" id="playing">⏸ Пауза</span><span class="pill" id="volume">Громкость 50%</span><span class="pill" id="armed">○ Управление выключено</span></div>
+<div class="row"><button class="primary" id="arm">Активировать на 10 сек.</button><button id="disarm">Отмена</button></div>
+<div class="notice">Одна активация — одна команда. Любая смена профиля выключает управление. Жест Z− всегда отменяет активацию.</div>
+<h3 class="sectiontitle" style="margin-top:24px">Журнал решений</h3><ul id="activity" aria-live="polite"></ul>
+</section>
+<section class="panel"><div class="sectiontitle">02 — Профили</div>
+<label for="preset">Текущий профиль</label><div class="row"><select id="preset"><option value="classic">Классический</option><option value="mirrored">Зеркальный</option><option value="minimal">Минимальный</option><option value="custom">Мой профиль</option></select><button id="apply">Применить настройки</button></div>
+<p class="help">Измени назначение жеста и нажми «Применить настройки», чтобы активировать личный профиль. Изменения сохраняются только в этом браузере.</p>
+<div id="mapping"></div>
+<div class="row"><button id="save">Сохранить мой профиль</button><button id="reset">Сбросить к классическому</button></div>
+<div class="notice">Пока это назначение команд осям гироскопа, <strong>не</strong> калиброванные движения вправо/влево. Никаких внешних медиаклавиш или API.</div>
+</section>
+<section class="panel wide"><div class="sectiontitle">03 — Симулятор движений кисти</div>
+<div class="twocol" id="gestureButtons"></div><p class="help">Нажми «Активировать», затем один из жестов. Для следующей команды активируй управление заново. Симулятор формирует искусственные IMU-пакеты, которые проходят через исходный GestureEngine.</p></section>
+</div><footer>Только localhost 127.0.0.1:8771 · без ADB · без Wi-Fi подключения часов · без умного кольца · без управления ОС или браузерной музыкой.</footer>
+</main><script type="module">
+import {GestureEngine} from '/motion/engine.mjs';
+import {GestureProfileRouter, GESTURES, PRESETS, MAPPING_CHOICES,validateMapping} from '/motion/gesture_profile_router.mjs';
+import {VirtualPlayer} from '/motion/virtual_player.mjs';
+const labels={NEXT:'Следующий трек',PREVIOUS:'Предыдущий трек',VOLUME_UP:'Громкость +5',VOLUME_DOWN:'Громкость −5',PLAY_PAUSE:'Воспроизведение / пауза',OFF:'Выключен'};
+const e=new GestureEngine(),router=new GestureProfileRouter(),player=new VirtualPlayer();
+let sensorMs=1000,pending={...PRESETS.classic};
+const $=id=>document.getElementById(id);
+function addLog(s){const li=document.createElement('li');li.textContent=s;$('activity').prepend(li);while($('activity').children.length>12)$('activity').lastChild.remove();}
+function renderPlayer(){const p=player.snapshot();$('track').textContent=p.title;$('trackcount').textContent=`Трек ${p.track_number} из ${p.track_count}`;
+ $('playing').textContent=p.playing?'▶ Играет':'⏸ Пауза';$('volume').textContent=`Громкость ${p.volume}%`;
+ const active=router.safety.armedUntilMs!==null&&performance.now()<=router.safety.armedUntilMs;
+ $('armed').textContent=active?'● Активирован':'○ Не активирован';$('armed').className='pill'+(active?' active':'');}
+function gestureButton(key){const b=document.createElement('button');b.type='button';b.dataset.key=key;
+ const label=document.createElement('strong');label.textContent=key.replace(':positive',' +').replace(':negative',' −');const note=document.createElement('span');note.textContent=key==='Z:negative'?'Отмена (зафиксировано)':labels[router.mapping[key]];
+ b.append(label,note);b.addEventListener('click',()=>simulate(key));return b;}
+function renderButtons(){$('gestureButtons').replaceChildren(...[...GESTURES,'Z:negative'].map(gestureButton));}
+function renderEditor(){const container=$('mapping');container.replaceChildren();for(const key of GESTURES){
+ const row=document.createElement('div');row.className='mapping';const title=document.createElement('label');title.textContent=key.replace(':positive',' +').replace(':negative',' −');
+ const select=document.createElement('select');select.setAttribute('aria-label',`Команда для ${key}`);select.dataset.key=key;
+ for(const value of MAPPING_CHOICES){const option=document.createElement('option');option.value=value;option.textContent=labels[value];select.append(option);}
+ select.value=pending[key];select.addEventListener('change',()=>{pending[key]=select.value;$('preset').value='custom';});
+ row.append(title,select);container.append(row);
+ }}
+function apply(profileName,customMap){try{const now=performance.now();if(profileName==='custom')router.selectCustom(validateMapping(customMap),now);else router.selectPreset(profileName,now);
+ pending={...router.mapping};$('preset').value=profileName;renderEditor();renderButtons();renderPlayer();addLog('✓ Профиль применён: '+profileName+'; активация сброшена');
+ }catch(err){addLog('Не удалось применить профиль: '+err.message);}}
+function simulate(key){sensorMs+=1600;const [axis,direction]=key.split(':');const gyro=[0,0,0];gyro[['X','Y','Z'].indexOf(axis)]=direction==='positive'?3.6:-3.6;
+ const p=(t,g)=>({schema:1,timestamp_ns:t*1e6,gyro_rads:g,quat_xyzw:[0,0,0,1]});
+ e.process(p(sensorMs,gyro));const evt=e.process(p(sensorMs+200,gyro));if(!evt){addLog(key+' → не распознан базовым движком');return;}
+ const choice=router.accept(evt,performance.now());if(choice.status==='command'){player.apply(choice.command);addLog('✓ '+key+' → '+labels[choice.command]);}
+ else addLog(key+' → '+choice.reason);renderPlayer();}
+$('arm').addEventListener('click',()=>{router.arm(performance.now());renderPlayer();addLog('✓ Активировано на 10 секунд');});
+$('disarm').addEventListener('click',()=>{router.disarm(performance.now());renderPlayer();addLog('Активация отменена');});
+$('preset').addEventListener('change',()=>{const name=$('preset').value;if(name==='custom')return;apply(name);});
+$('apply').addEventListener('click',()=>apply('custom',pending));
+$('reset').addEventListener('click',()=>apply('classic'));
+$('save').addEventListener('click',()=>{try{const data=validateMapping(pending);apply('custom',data);localStorage.setItem('gwl087_profile',JSON.stringify(data));addLog('✓ Личный профиль применён и сохранён в этом браузере');}catch(err){addLog('Ошибка сохранения: '+err.message);}});
+try{const stored=localStorage.getItem('gwl087_profile');if(stored){pending=validateMapping(JSON.parse(stored));apply('custom',pending);}else apply('classic');}
+catch{pending={...PRESETS.classic};apply('classic');addLog('Сохранённый профиль недоступен; использован классический');}
+setInterval(renderPlayer,500);
+</script></body></html>
