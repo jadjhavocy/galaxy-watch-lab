@@ -1,0 +1,78 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Galaxy Watch Lab · Virtual Music Playground</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,'Segoe UI',sans-serif;color:#eaf0ff;background:#0a0e19}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 20% 0%,#22365c,transparent 48%),#0a0e19}
+main{max-width:1080px;padding:36px 20px;margin:auto}
+h1{font-size:clamp(30px,5vw,48px);letter-spacing:-.04em;margin:25px 0 10px}
+p{color:#a8b7d0;line-height:1.55}
+.kicker{color:#96bbff;font-size:13px;letter-spacing:.12em;font-weight:750}
+.tag{border:1px solid #775982;color:#eecbff;padding:7px 10px;border-radius:30px;display:inline-block;font-size:12px;margin-top:10px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:26px 0}
+.panel{background:#111b2c;border:1px solid #30415c;border-radius:17px;padding:25px;box-shadow:0 20px 50px #0003}
+.heading{font-size:12px;color:#879fbe;text-transform:uppercase;letter-spacing:.13em;font-weight:750;margin-bottom:15px}
+.track{font-weight:800;font-size:32px;letter-spacing:-.04em;margin:7px 0 20px}
+.chips{display:flex;gap:9px;flex-wrap:wrap;margin:14px 0 20px}
+.chip{font-size:13px;padding:8px 10px;background:#192a41;border-radius:8px;color:#c6d8ee}
+#armed{border:1px solid #5a6584}#armed.active{border-color:#37a575;color:#a7ffce;background:#153b30}
+.buttons{display:grid;grid-template-columns:repeat(2,1fr);gap:11px}
+button{background:#233654;color:#eaf0ff;border:1px solid #42597d;border-radius:11px;padding:14px 9px;cursor:pointer;font:inherit;font-weight:700}
+button:hover{background:#315077}button:focus-visible{outline:3px solid #acc5ff;outline-offset:2px}
+button b{display:block;color:#aabbd2;font-size:12px;font-weight:400;margin-top:5px}
+button.arm{background:#7688f4;color:#11152d;border-color:#98a4ff}
+.row{display:flex;gap:10px;margin:18px 0}.row button{flex:1}
+.notice{padding:12px 13px;background:#202a40;border-left:3px solid #8f9bfb;border-radius:5px;font-size:14px;color:#b5c5de}
+#log{max-height:210px;overflow:auto;display:grid;gap:6px;padding:0;list-style:none}
+#log li{padding:8px 11px;border-radius:7px;background:#1a2940;font-size:13px;color:#b6c9e3}
+footer{font-size:13px;color:#90a2be;margin:18px 0}
+@media(max-width:740px){.grid{grid-template-columns:1fr}.panel{padding:19px}}
+</style></head><body><main>
+<div class="kicker">GALAXY WATCH LAB · v0.8.6</div><span class="tag">100% SYNTHETIC · OFFLINE SANDBOX</span>
+<h1>Управление музыкой жестами кисти</h1>
+<p>Проверка всей цепочки: искусственные IMU-пакеты → существующий GestureEngine → защита от случайной команды → виртуальный плеер. Часы и реальные медиаприложения не используются.</p>
+<div class="grid"><section class="panel">
+<div class="heading">Виртуальный плеер</div><div id="counter">Трек 1 из 3</div><div id="track" class="track">Demo Track A</div>
+<div class="chips"><span id="playing" class="chip">⏸ Пауза</span><span class="chip" id="volume">Громкость 50%</span><span class="chip" id="armed">○ Не активирован</span></div>
+<div class="row"><button class="arm" id="arm">Активировать на 10 сек.</button><button id="disarm">Отмена</button></div>
+<div class="notice">Одна активация разрешает только одну команду. Без активации жесты игнорируются.</div>
+<div class="heading" style="margin-top:22px">Журнал событий</div><ul id="log" aria-live="polite"></ul>
+</section><section class="panel"><div class="heading">Симулятор распознанных жестов</div>
+<div class="buttons">
+<button data-axis="X" data-dir="positive">X + <b>Следующий трек</b></button>
+<button data-axis="X" data-dir="negative">X − <b>Предыдущий трек</b></button>
+<button data-axis="Y" data-dir="positive">Y + <b>Громкость +5</b></button>
+<button data-axis="Y" data-dir="negative">Y − <b>Громкость −5</b></button>
+<button data-axis="Z" data-dir="positive">Z + <b>Воспроизведение / пауза</b></button>
+<button data-axis="Z" data-dir="negative">Z − <b>Отмена активации</b></button>
+</div>
+<p class="notice">X/Y/Z — оси гироскопа, <strong>не</strong> подтверждённые движения вправо, влево или вверх. Для анатомической привязки нужна калибровка на реальных записях.</p>
+</section></div>
+<footer>Локально на 127.0.0.1 · без Bluetooth · без ADB · без Яндекс Музыки и SoundCloud · без умного кольца.</footer>
+</main><script type="module">
+import {GestureEngine} from '/motion/engine.mjs';
+import {ControlRouter} from '/motion/control_router.mjs';
+import {VirtualPlayer} from '/motion/virtual_player.mjs';
+const engine=new GestureEngine(),router=new ControlRouter(),player=new VirtualPlayer();
+let syntheticSensorMs=1000;
+const $=id=>document.getElementById(id);
+const pkt=(ms,g)=>({schema:1,timestamp_ns:ms*1e6,gyro_rads:g,quat_xyzw:[0,0,0,1]});
+function paint(){const p=player.snapshot();$('track').textContent=p.title;
+ $('counter').textContent=`Трек ${p.track_number} из ${p.track_count}`;
+ $('playing').textContent=p.playing?'▶ Играет':'⏸ Пауза';$('volume').textContent=`Громкость ${p.volume}%`;
+ const on=router.armedUntilMs!==null&&performance.now()<=router.armedUntilMs;
+ $('armed').textContent=on?'● Активирован':'○ Не активирован';$('armed').className='chip'+(on?' active':'');}
+function log(x){const li=document.createElement('li');li.textContent=x;$('log').prepend(li);
+ while($('log').children.length>10)$('log').lastChild.remove();}
+$('arm').onclick=()=>{router.arm(performance.now());log('✓ Активировано на 10 секунд');paint();};
+$('disarm').onclick=()=>{router.disarm(performance.now());log('Активация отменена');paint();};
+for(const b of document.querySelectorAll('[data-axis]'))b.onclick=()=>{
+ syntheticSensorMs+=1500;const g=[0,0,0],axis=b.dataset.axis,dir=b.dataset.dir;
+ g[['X','Y','Z'].indexOf(axis)]=dir==='positive'?3.5:-3.5;
+ engine.process(pkt(syntheticSensorMs,g));const event=engine.process(pkt(syntheticSensorMs+200,g));
+ if(!event){log('Не обнаружено базовым GestureEngine');paint();return;}
+ const decision=router.accept(event,performance.now());
+ if(decision.status==='command'){player.apply(decision.command);log('✓ '+axis+' '+dir+' → '+decision.command);}
+ else log(axis+' '+dir+' → '+decision.reason);
+ paint();};
+paint();setInterval(paint,500);
+</script></body></html>
