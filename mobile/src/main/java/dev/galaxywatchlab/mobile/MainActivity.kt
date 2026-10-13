@@ -30,7 +30,7 @@ class MainActivity : Activity() {
             setPadding(24, 24, 24, 24)
         }
         val header = TextView(this).apply {
-            text = "Galaxy Watch Lab · Pixel Companion 0.9.0"
+            text = "Galaxy Watch Lab · Pixel Companion 0.9.1"
             textSize = 21f
         }
         val disclosure = TextView(this).apply {

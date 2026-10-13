@@ -7,6 +7,7 @@ import android.media.session.MediaController
 import android.media.session.MediaSessionManager
 import android.media.session.PlaybackState
 import android.os.SystemClock
+import android.view.KeyEvent
 import java.util.ArrayDeque
 import java.util.LinkedHashSet
 
@@ -80,7 +81,8 @@ object MediaControl {
         if (command !in setOf("PLAY_PAUSE", "NEXT", "PREVIOUS")) return "BLOCKED_BAD_COMMAND"
         if (uncertain) return "BLOCKED_UNCERTAIN_RESTART"
         val now = SystemClock.elapsedRealtime()
-        if (now > (if (fromWatch) remoteUntil else manualUntil)) return "BLOCKED_NOT_ARMED"
+        val permitUntil = if (fromWatch) remoteUntil else manualUntil
+        if (permitUntil == 0L || now >= permitUntil) return "BLOCKED_NOT_ARMED"
         if (fromWatch) {
             if (id == null || !Regex("[A-Za-z0-9_-]{8,64}").matches(id)) return "BLOCKED_BAD_ID"
             if (!seenIds.add(id)) return "BLOCKED_DUPLICATE"
@@ -88,7 +90,7 @@ object MediaControl {
         }
         if (!hasAccess(context)) return "BLOCKED_PERMISSION"
         if (lastRequestAt >= 0L && now - lastRequestAt < COOLDOWN_MS) return "BLOCKED_COOLDOWN"
-        while (!requests.isEmpty() && now - requests.peekFirst() >= LIMIT_MS) requests.removeFirst()
+        while (!requests.isEmpty() && now - requests.first() >= LIMIT_MS) requests.removeFirst()
         if (requests.size >= LIMIT) return "BLOCKED_RATE_LIMIT"
         val selected = target(context)
         val controllers = try { sessions(context, selected) } catch (_: SecurityException) { return "BLOCKED_PERMISSION" }
@@ -96,25 +98,32 @@ object MediaControl {
         val controller = controllers[0]
         val playback = controller.playbackState ?: return "BLOCKED_NO_PLAYBACK_STATE"
         val actions = playback.actions
-        val requested: Long = when (command) {
-            "NEXT" -> PlaybackState.ACTION_SKIP_TO_NEXT
-            "PREVIOUS" -> PlaybackState.ACTION_SKIP_TO_PREVIOUS
-            else -> if (playback.state == PlaybackState.STATE_PLAYING) {
-                PlaybackState.ACTION_PAUSE or PlaybackState.ACTION_PLAY_PAUSE
-            } else {
-                PlaybackState.ACTION_PLAY or PlaybackState.ACTION_PLAY_PAUSE
-            }
-        }
-        if (actions and requested == 0L) return "BLOCKED_UNSUPPORTED_ACTION"
+        val plan = MediaCommandPolicy.decide(
+            command = command,
+            playing = playback.state == PlaybackState.STATE_PLAYING,
+            canPlay = actions and PlaybackState.ACTION_PLAY != 0L,
+            canPause = actions and PlaybackState.ACTION_PAUSE != 0L,
+            canToggle = actions and PlaybackState.ACTION_PLAY_PAUSE != 0L,
+            canNext = actions and PlaybackState.ACTION_SKIP_TO_NEXT != 0L,
+            canPrevious = actions and PlaybackState.ACTION_SKIP_TO_PREVIOUS != 0L
+        )
+        if (plan == null) return "BLOCKED_UNSUPPORTED_ACTION"
         // Reserve request slot before crossing the Android media IPC boundary. Never auto-retry.
         requests.addLast(now)
         lastRequestAt = now
         return try {
-            when (command) {
-                "NEXT" -> controller.transportControls.skipToNext()
-                "PREVIOUS" -> controller.transportControls.skipToPrevious()
-                else -> if (playback.state == PlaybackState.STATE_PLAYING) controller.transportControls.pause()
-                        else controller.transportControls.play()
+            when (plan) {
+                MediaDispatchPlan.NEXT -> controller.transportControls.skipToNext()
+                MediaDispatchPlan.PREVIOUS -> controller.transportControls.skipToPrevious()
+                MediaDispatchPlan.PAUSE -> controller.transportControls.pause()
+                MediaDispatchPlan.PLAY -> controller.transportControls.play()
+                MediaDispatchPlan.TOGGLE -> {
+                    // Targeted to THIS MediaController, not a global OS media key.
+                    // A paired DOWN/UP is one logical toggle. Never retry either half.
+                    val down = controller.dispatchMediaButtonEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE))
+                    val up = controller.dispatchMediaButtonEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE))
+                    if (!down || !up) throw IllegalStateException("targeted_toggle_not_delivered")
+                }
             }
             "REQUESTED_${if (selected == YANDEX) "YANDEX" else "SOUNDCLOUD"}_$command"
         } catch (_: Exception) {

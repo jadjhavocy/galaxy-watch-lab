@@ -24,7 +24,7 @@ assert.match(policy,/COOLDOWN_MS = 900L/);
 assert.match(policy,/LIMIT = 12/);
 assert.match(policy,/WINDOW_MS = 120_000L/);
 assert.match(policy,/BLOCKED_DUPLICATE/);
-assert.match(policy,/if \(now > \(if \(fromWatch\) remoteUntil else manualUntil\)\)/);
+assert.match(policy,/if \(permitUntil == 0L \|\| now >= permitUntil\)/);
 assert.match(listener,/event\.path != "\/gwl\/v1\/media"/);
 assert.match(listener,/event\.data\.size > 256/);
 assert.match(listener,/if \(json\.length\(\) != 3\)/);

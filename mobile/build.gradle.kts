@@ -8,8 +8,8 @@ android {
         applicationId = "dev.galaxywatchlab.bridge"
         minSdk = 28
         targetSdk = 34
-        versionCode = 1
-        versionName = "0.9.0-phone-preview"
+        versionCode = 2
+        versionName = "0.9.1-phone-preview"
     }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
     kotlinOptions { jvmTarget = "17" }
@@ -17,4 +17,5 @@ android {
 
 dependencies {
     implementation("com.google.android.gms:play-services-wearable:18.2.0")
+    testImplementation("junit:junit:4.13.2")
 }
