@@ -18,7 +18,7 @@ button.primary{background:#788af6;color:#0b1330;border-color:#a2afff}.twocol{dis
 #armed.active{background:#164234;color:#adffcb}.wide{grid-column:1/-1}.help{font-size:12px;line-height:1.5}
 footer{color:#90a4bf;font-size:12px;margin-top:25px}@media(max-width:750px){.grid{grid-template-columns:1fr}.panel{padding:20px}.wide{grid-column:auto}}
 </style></head><body><main>
-<header><small>GALAXY WATCH LAB · v0.8.8</small><div><span class="tag">SYNTHETIC GESTURES / WINDOWS MEDIA BRIDGE / DEFAULT DRY-RUN</span></div></header>
+<header><small>GALAXY WATCH LAB · v0.8.9</small><div><span class="tag">SYNTHETIC GESTURES / WINDOWS MEDIA BRIDGE / DEFAULT DRY-RUN</span></div></header>
 <h1>Настраиваемое управление музыкой — Windows</h1>
 <p>Здесь используются только искусственные жесты. Режим по умолчанию — сухой прогон без воздействия на музыку. Реальные системные медиаклавиши требуют отдельного явного запуска в терминале и подтверждения в интерфейсе.</p>
 <div class="grid">
@@ -28,6 +28,7 @@ footer{color:#90a4bf;font-size:12px;margin-top:25px}@media(max-width:750px){.gri
 <div class="row"><button class="primary" id="arm">Активировать на 10 сек.</button><button id="disarm">Отмена</button></div>
 <div class="notice">Одна активация — одна команда. Любая смена профиля выключает управление. Жест Z− всегда отменяет активацию.</div>
 <div class="notice" id="bridgeStatus" role="status" aria-live="polite">Проверяем безопасный режим локального медиамоста…</div>
+<div class="notice" id="guardStatus" role="status" aria-live="polite">Проверяем защиту от повторных команд…</div>
 <label class="notice" id="liveConsent" style="display:none">
  <input id="liveAgree" type="checkbox"> Я понимаю: в режиме LIVE медиаклавиши Windows воздействуют на выбранный самой Windows медиасеанс, а не гарантированно на Яндекс Музыку или SoundCloud.
 </label>
@@ -62,6 +63,21 @@ async function refreshStatus(){
  }catch{bridgeMode='UNAVAILABLE';$('bridgeStatus').textContent='Медиамост недоступен. Команды заблокированы.';}
 }
 
+async function refreshGuard(){
+ try {
+  const response=await fetch('/api/diagnostics',{cache:'no-store'});
+  if(!response.ok)throw new Error('diagnostics unavailable');
+  const data=await response.json(), guard=data.media_guard;
+  if(!guard)throw new Error('guard data missing');
+  $('guardStatus').textContent=guard.locked
+   ? 'Медиакоманды заблокированы после неопределённого результата. Останови сервер (Ctrl+C), проверь музыку и причину ошибки перед новым запуском.'
+   : `Защита готова: отправлено ${guard.sent}, отклонено ${guard.rejected}; лимит ${guard.limit_per_minute} команд/мин`;
+  $('arm').disabled=!!guard.locked;
+ }catch{
+  $('guardStatus').textContent='Диагностика недоступна. Не включай LIVE, пока состояние защиты неизвестно.';
+  $('arm').disabled=true;
+ }
+}
 let sensorMs=1000,pending={...PRESETS.classic};
 const $=id=>document.getElementById(id);
 function addLog(s){const li=document.createElement('li');li.textContent=s;$('activity').prepend(li);while($('activity').children.length>12)$('activity').lastChild.remove();}
@@ -109,5 +125,5 @@ $('reset').addEventListener('click',()=>apply('classic'));
 $('save').addEventListener('click',()=>{try{const data=validateMapping(pending);apply('custom',data);localStorage.setItem('gwl087_profile',JSON.stringify(data));addLog('✓ Личный профиль применён и сохранён в этом браузере');}catch(err){addLog('Ошибка сохранения: '+err.message);}});
 try{const stored=localStorage.getItem('gwl087_profile');if(stored){pending=validateMapping(JSON.parse(stored));apply('custom',pending);}else apply('classic');}
 catch{pending={...PRESETS.classic};apply('classic');addLog('Сохранённый профиль недоступен; использован классический');}
-refreshStatus();setInterval(renderPlayer,500);
+refreshStatus();refreshGuard();setInterval(refreshGuard,2000);setInterval(renderPlayer,500);
 </script></body></html>

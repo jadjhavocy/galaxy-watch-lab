@@ -7,6 +7,7 @@ import crypto from 'node:crypto';
 import {spawn} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {MUSIC_COMMANDS} from '../motion/control_router.mjs';
+import {MediaSafetyGuard} from '../motion/media_safety_guard.mjs';
 const thisFile=fileURLToPath(import.meta.url);
 const repo=path.resolve(path.dirname(thisFile),'..');
 const routes=new Map([
@@ -32,13 +33,17 @@ function nativeKey(command){
 function respond(res,status,json){const body=Buffer.from(JSON.stringify(json),'utf8');res.writeHead(status,{
  'Content-Type':'application/json; charset=utf-8','Content-Length':body.length,
  'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','X-Frame-Options':'DENY'});res.end(body);}
-export function createMediaBridge({live=false,mediaExecutor=nativeKey,port=8772,clock=()=>Date.now()}={}){
+export function createMediaBridge({live=false,mediaExecutor=nativeKey,port=8772,clock=()=>Date.now(),platform=process.platform}={}){
  if(!Number.isSafeInteger(port)||(port!==0&&(port<1024||port>65535)))throw new RangeError('invalid media port');
  const expectedOrigin=()=> 'http://127.0.0.1:'+(server.address()?.port ?? port);
  const nonce=crypto.randomBytes(24).toString('hex');
  let armedUntil=0, lastCommandAt=-Infinity, busy=false;
+ const guard = new MediaSafetyGuard({executor:mediaExecutor,clock});
  const server=http.createServer(async(req,res)=>{
   const route=req.url?.split('?')[0];
+  if(req.method==='GET'&&route==='/api/diagnostics'){
+   return respond(res,200,{service:'GWL_MEDIA_RELIABILITY',live,armed:armedUntil>clock(),media_guard:guard.snapshot()});
+  }
   if(req.method==='GET'&&route==='/api/status'){
    return respond(res,200,{mode:live?'LIVE_OPT_IN':'DRY_RUN',armed:armedUntil>clock(),target:'WINDOWS_SELECTED_MEDIA_SESSION_NOT_GUARANTEED'});
   }
@@ -65,6 +70,7 @@ export function createMediaBridge({live=false,mediaExecutor=nativeKey,port=8772,
    if(!parsed||Array.isArray(parsed)||typeof parsed!=='object')throw new Error('bad JSON object');
    if(route==='/api/disarm'){armedUntil=0;return respond(res,200,{status:'disarmed'});}
    if(route==='/api/arm'){
+    if(live&&guard.snapshot().locked)return respond(res,503,{error:'guard_locked_restart_required'});
     if(Object.keys(parsed).length!==0)return respond(res,400,{error:'bad_arm_payload'});
     armedUntil=clock()+10000;
     return respond(res,200,{status:'armed',expires_in_ms:10000,mode:live?'LIVE_OPT_IN':'DRY_RUN'});
@@ -77,10 +83,15 @@ export function createMediaBridge({live=false,mediaExecutor=nativeKey,port=8772,
    if(now-lastCommandAt<900)return respond(res,429,{error:'cooldown'});
    lastCommandAt=now;
    if(!live)return respond(res,200,{status:'DRY_RUN',command:parsed.command,target:'VIRTUAL_ONLY'});
-   if(process.platform!=='win32')return respond(res,501,{error:'Windows_only'});
+   if(platform!=='win32')return respond(res,501,{error:'Windows_only'});
    busy=true;
-   try{await mediaExecutor(parsed.command);return respond(res,200,{status:'OS_KEY_SENT',command:parsed.command,target:'WINDOWS_SELECTED_SESSION'});}
-   catch{return respond(res,502,{error:'media_helper_failed'})}
+   try{await guard.dispatch(parsed.command);return respond(res,200,{status:'OS_KEY_SENT',command:parsed.command,target:'WINDOWS_SELECTED_SESSION'});}
+   catch(err){
+    const code=err?.code||'media_helper_failed';
+    const status=['media_guard_rate_limit','media_guard_cooldown'].includes(code)?429:
+      ['dispatch_uncertain_restart_required','guard_locked_restart_required'].includes(code)?503:502;
+    return respond(res,status,{error:code});
+   }
    finally{busy=false;}
   }catch{return respond(res,400,{error:'invalid_payload'});}
  });
